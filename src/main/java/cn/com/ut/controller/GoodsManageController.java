@@ -8,9 +8,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import cn.com.ut.entity.Goods;
 import cn.com.ut.pojo.GoodsBodyVo;
 import cn.com.ut.pojo.GoodsCreateVo;
-import cn.com.ut.pojo.GoodsDetailRespVo;
 import cn.com.ut.pojo.GoodsExtendInfoVo;
 import cn.com.ut.pojo.GoodsIdListVo;
 import cn.com.ut.pojo.GoodsIdVo;
@@ -59,6 +59,14 @@ public class GoodsManageController {
 
 		goodsService.updateGoods(goodsUpdateVo);
 		return ResponseInfo.build();
+
+	}
+
+	@PostMapping("/findOne")
+	public ResponseInfo<Goods> findOne(@RequestBody @Valid GoodsIdVo goodsIdVo) {
+
+		Goods goods = goodsService.findOne(goodsIdVo.getGoodsId());
+		return ResponseInfo.build().appendData(goods);
 
 	}
 
@@ -198,20 +206,6 @@ public class GoodsManageController {
 
 		GoodsBodyVo goodsBody = goodsService.getGoodsContent(goodsIdVo);
 		return ResponseInfo.build().appendData(goodsBody);
-
-	}
-
-	/**
-	 * 获取商品详情
-	 *
-	 * @param goodsIdVo
-	 * @return
-	 */
-	@PostMapping("/getGoods")
-	public ResponseInfo<GoodsDetailRespVo> get(@RequestBody @Valid GoodsIdVo goodsIdVo) {
-
-		GoodsDetailRespVo goodsDetail = goodsService.getGoods(goodsIdVo);
-		return ResponseInfo.build().appendData(goodsDetail);
 
 	}
 }

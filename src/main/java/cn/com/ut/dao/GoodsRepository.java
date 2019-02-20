@@ -8,18 +8,12 @@ import java.util.Map;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
 import org.springframework.transaction.annotation.Transactional;
 
 import cn.com.ut.entity.Goods;
 import cn.com.ut.pojo.GoodsBodyVo;
-import cn.com.ut.pojo.GoodsDetailRespVo;
 import cn.com.ut.pojo.GoodsExtendInfoVo;
-import cn.com.ut.pojo.GoodsManageDetailLookRespVo;
-import cn.com.ut.pojo.GoodsManageDetailQueryRespVo;
 import cn.com.ut.pojo.GoodsStateVo;
-import cn.com.ut.pojo.GoodsclassAndAppRespVO;
-import cn.com.ut.pojo.SpecValueVo;
 
 /**
  * @Description: 商品管理DAO
@@ -85,7 +79,7 @@ public interface GoodsRepository extends JpaRepository<Goods, String> {
 	 *
 	 * @param goodsId
 	 */
-	@Query("select new cn.com.ut.biz.goods.pojo.GoodsStateVo(g.id, g.goodsState) from Goods g where g.id = ?1")
+	@Query("select new cn.com.ut.pojo.GoodsStateVo(g.id, g.goodsState) from Goods g where g.id = ?1")
 	GoodsStateVo getGoodsState(String goodsId);
 
 	/**
@@ -230,7 +224,7 @@ public interface GoodsRepository extends JpaRepository<Goods, String> {
 	 *
 	 * @param goodsId
 	 */
-	@Query("select new cn.com.ut.biz.goods.pojo.GoodsBodyVo(g.id as goodsId, g.goodsBody) from Goods g where g.id = ?1")
+	@Query("select new cn.com.ut.pojo.GoodsBodyVo(g.id as goodsId, g.goodsBody) from Goods g where g.id = ?1")
 	GoodsBodyVo getGoodsBody(String goodsId);
 
 	/**
@@ -253,7 +247,7 @@ public interface GoodsRepository extends JpaRepository<Goods, String> {
 	 * @param goodsId
 	 * @return
 	 */
-	@Query("select new cn.com.ut.biz.goods.pojo.GoodsExtendInfoVo(g.id as goodsId, g.extendInfo) from Goods g where g.id = ?1")
+	@Query("select new cn.com.ut.pojo.GoodsExtendInfoVo(g.id as goodsId, g.extendInfo) from Goods g where g.id = ?1")
 	GoodsExtendInfoVo getExtendInfo(String goodsId);
 
 	/**
@@ -272,17 +266,6 @@ public interface GoodsRepository extends JpaRepository<Goods, String> {
 	@Query("update Goods g set g.specValue = ?1, g.priceMin = ?2, g.priceMax = ?3, g.updateId = ?4, g.updateTime = ?5 where g.id = ?6")
 	int updateSpecValueAndPriceMinAndpAndPriceMax(String specValue, BigDecimal priceMin,
 			BigDecimal priceMax, String updateId, Timestamp updateTime, String goodsId);
-
-	/**
-	 * 获取商品关联属性
-	 *
-	 * @param goodsId
-	 * @param isDel
-	 * @return
-	 */
-	@Query("select new cn.com.ut.biz.goods.pojo.SpecValueVo(s.id as specId,s.spName as specName,sv.id as specvalueId,sv.spvalueName as specvalueName) from Goods g left join GoodsSpec s on g.typeId = s.typeId left join GoodsSpecValue sv on s.id = sv.spId where g.id=:goodsId and g.isDel=:isDel and s.isDel=:isDel and sv.isDel=:isDel order by s.sort, sv.sort")
-	List<SpecValueVo> queryAllGoodsSpec(@Param("goodsId") String goodsId,
-			@Param("isDel") String isDel);
 
 	/**
 	 * 根据商品ID和删除标识查询商品关联规格值
@@ -314,40 +297,4 @@ public interface GoodsRepository extends JpaRepository<Goods, String> {
 	 * @return
 	 */
 	boolean existsByGcId(String gcId);
-
-	/**
-	 * 根据商品ID获取商品详情
-	 *
-	 * @param goodsId
-	 * @return
-	 */
-	@Query("select new cn.com.ut.biz.goods.pojo.GoodsDetailRespVo(g.id,g.goodsName,g.goodsAdvword,g.gcId,gc.gcName,g.storeId,g.brandId,b.brandName,g.typeId,t.typeName,g.specValue,g.goodsPrice,g.priceMin,g.priceMax,g.goodsMarketprice,g.goodsCostprice,g.goodsDiscount,g.goodsSerial,g.goodsStorage,g.goodsStorageAlarm,g.goodsCommend,g.goodsFreight,g.goodsVat,g.isVirtual,g.goodsSalenum,g.imagePath,g.extendInfo,g.evaluationCount) from Goods g left join Goodsclass gc on g.gcId = gc.id left join Brand b on g.brandId = b.id left join GoodsType t on g.typeId = t.id where g.id = ?1")
-	GoodsDetailRespVo getGoods(String goodsId);
-
-	/**
-	 * 根据商品ID获取商品详情（商家管理商品）
-	 *
-	 * @param goodsId
-	 * @return
-	 */
-	@Query("select new cn.com.ut.biz.goods.pojo.GoodsManageDetailLookRespVo(g.storeId,g.id as goodsId,g.goodsSerial,g.goodsName,g.goodsDesc,g.gcId,gc.gcName,g.goodsPrice,g.goodsMarketprice,g.goodsStorage,g.goodsBody,g.extendInfo,g.goodsState,g.createTime,g.updateTime) from Goods g left join Goodsclass gc on g.gcId = gc.id where g.id = ?1")
-	GoodsManageDetailLookRespVo getGoodsInfo(String goodsId);
-
-	/**
-	 * 根据商品ID获取商品信息（提供给修改商品信息时使用）
-	 *
-	 * @param goodsId
-	 * @return
-	 */
-	@Query("select new cn.com.ut.biz.goods.pojo.GoodsManageDetailQueryRespVo(g.storeId,g.id as goodsId,g.goodsName,g.goodsDesc,g.gcId,g.goodsPrice,g.goodsMarketprice,g.goodsStorage,g.goodsBody,g.extendInfo) from Goods g where g.id = ?1")
-	GoodsManageDetailQueryRespVo getGoodsInfoForEdit(String goodsId);
-
-	/**
-	 * 根据商品ID集合查找商品所属分类和应用ID信息
-	 * 
-	 * @param goodsIds
-	 * @return
-	 */
-	@Query("select new cn.com.ut.biz.goods.pojo.GoodsclassAndAppRespVO(g.id as goodsId,g.gcId,g.appId) from Goods g where g.id in ?1")
-	List<GoodsclassAndAppRespVO> findGoodsclassAndAppByGoodsIds(List<String> goodsIds);
 }

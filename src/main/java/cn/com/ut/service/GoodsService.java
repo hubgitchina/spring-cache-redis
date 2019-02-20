@@ -5,7 +5,6 @@ import org.springframework.data.domain.Page;
 import cn.com.ut.entity.Goods;
 import cn.com.ut.pojo.GoodsBodyVo;
 import cn.com.ut.pojo.GoodsCreateVo;
-import cn.com.ut.pojo.GoodsDetailRespVo;
 import cn.com.ut.pojo.GoodsExtendInfoVo;
 import cn.com.ut.pojo.GoodsIdListVo;
 import cn.com.ut.pojo.GoodsIdVo;
@@ -37,14 +36,6 @@ public interface GoodsService {
 	 * @param goodsUpdateVo
 	 */
 	void updateGoods(GoodsUpdateVo goodsUpdateVo);
-
-	/**
-	 * 获取商品信息
-	 *
-	 * @param goodsIdVo
-	 * @return
-	 */
-	GoodsDetailRespVo getGoods(GoodsIdVo goodsIdVo);
 
 	/**
 	 * 查询商品详情

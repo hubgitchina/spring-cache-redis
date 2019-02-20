@@ -5,6 +5,9 @@ import java.util.List;
 
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -18,7 +21,6 @@ import cn.com.ut.dao.GoodsRepository;
 import cn.com.ut.entity.Goods;
 import cn.com.ut.pojo.GoodsBodyVo;
 import cn.com.ut.pojo.GoodsCreateVo;
-import cn.com.ut.pojo.GoodsDetailRespVo;
 import cn.com.ut.pojo.GoodsExtendInfoVo;
 import cn.com.ut.pojo.GoodsIdListVo;
 import cn.com.ut.pojo.GoodsIdVo;
@@ -49,9 +51,10 @@ public class GoodsServiceImpl extends JPQLQueryUtil implements GoodsService {
 	private static final String userId = "666";
 
 	@Override
+	@CachePut(value = "goods", key = "#result")
 	public String addGoods(GoodsCreateVo goodsCreateVo) {
 
-		String storeId = "111";
+		String storeId = goodsCreateVo.getStoreId();
 
 		boolean isCanAdd = goodsRepository
 				.existsByGoodsNameAndStoreIdAndIsDel(goodsCreateVo.getGoodsName(), storeId, "N");
@@ -60,7 +63,7 @@ public class GoodsServiceImpl extends JPQLQueryUtil implements GoodsService {
 		}
 
 		// 查询分类关联的类型ID，该值由后台获取之后设置新增商品的类型ID字段，非前端传入
-		String typeId = "222";
+		String typeId = "111";
 
 		Goods goods = new Goods();
 		BeanUtils.copyProperties(goodsCreateVo, goods);
@@ -70,10 +73,10 @@ public class GoodsServiceImpl extends JPQLQueryUtil implements GoodsService {
 		}
 
 		// 生成商品编号
-		String goodsSerial = "333";
+		String goodsSerial = "222";
 		goods.setGoodsSerial(goodsSerial);
 
-		goods.setAppId("555");
+		goods.setAppId("333");
 
 		goods.setPriceMin(goodsCreateVo.getGoodsPrice());
 		goods.setPriceMax(goodsCreateVo.getGoodsPrice());
@@ -92,6 +95,7 @@ public class GoodsServiceImpl extends JPQLQueryUtil implements GoodsService {
 	}
 
 	@Override
+	@CachePut(value = "goods", key = "#goodsUpdateVo.goodsId")
 	public void updateGoods(GoodsUpdateVo goodsUpdateVo) {
 
 		String goodsId = goodsUpdateVo.getGoodsId();
@@ -118,6 +122,7 @@ public class GoodsServiceImpl extends JPQLQueryUtil implements GoodsService {
 	}
 
 	@Override
+	@CacheEvict(value = "goods", key = "#goodsIdVo.goodsId")
 	public void delete(GoodsIdVo goodsIdVo) {
 
 		Timestamp now = new Timestamp(System.currentTimeMillis());
@@ -135,18 +140,7 @@ public class GoodsServiceImpl extends JPQLQueryUtil implements GoodsService {
 
 	@Override
 	@Transactional(readOnly = true)
-	public GoodsDetailRespVo getGoods(GoodsIdVo goodsIdVo) {
-
-		GoodsDetailRespVo goodsDetailRespVo = goodsRepository.getGoods(goodsIdVo.getGoodsId());
-		if (goodsDetailRespVo == null) {
-			ExceptionUtil.throwServiceException("商品不存在");
-		}
-		goodsDetailRespVo.setStoreName("测试店铺");
-		return goodsDetailRespVo;
-	}
-
-	@Override
-	@Transactional(readOnly = true)
+	@Cacheable(value = "goods", key = "#goodsId", sync = true)
 	public Goods findOne(String goodsId) {
 
 		Goods goods = goodsRepository.findOne(goodsId);

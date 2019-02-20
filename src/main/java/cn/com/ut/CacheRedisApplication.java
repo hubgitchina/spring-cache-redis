@@ -2,14 +2,15 @@ package cn.com.ut;
 
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.builder.SpringApplicationBuilder;
-import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
+import org.springframework.cache.annotation.EnableCaching;
 
-@EnableDiscoveryClient
+//@EnableDiscoveryClient
 @SpringBootApplication
-public class ElaticSearchApplication {
+@EnableCaching
+public class CacheRedisApplication {
 
 	public static void main(String[] args) {
 
-		new SpringApplicationBuilder(ElaticSearchApplication.class).web(true).run(args);
+		new SpringApplicationBuilder(CacheRedisApplication.class).web(true).run(args);
 	}
 }
