@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -33,7 +34,6 @@ import cn.com.ut.service.GoodsService;
 import cn.com.ut.util.BizConstants;
 import cn.com.ut.util.CommonUtil;
 import cn.com.ut.util.ExceptionUtil;
-import cn.com.ut.util.JPQLQueryUtil;
 import cn.com.ut.util.PageInfo;
 
 /**
@@ -43,7 +43,7 @@ import cn.com.ut.util.PageInfo;
  */
 @Service
 @Transactional
-public class GoodsServiceImpl extends JPQLQueryUtil implements GoodsService {
+public class GoodsServiceImpl implements GoodsService {
 
 	@Autowired
 	private GoodsRepository goodsRepository;
@@ -122,7 +122,11 @@ public class GoodsServiceImpl extends JPQLQueryUtil implements GoodsService {
 	}
 
 	@Override
-	@CacheEvict(value = "goods", key = "#goodsIdVo.goodsId")
+	// @CacheEvict(value = "goods", key = "#goodsIdVo.goodsId")
+
+	// 一次删除多个Key对应的缓存数据
+	@Caching(evict = { @CacheEvict(value = "goods", key = "#goodsIdVo.goodsId"),
+			@CacheEvict(value = "goods", key = "#goodsIdVo.goodsId+'_image'") })
 	public void delete(GoodsIdVo goodsIdVo) {
 
 		Timestamp now = new Timestamp(System.currentTimeMillis());
