@@ -1,5 +1,8 @@
 package cn.com.ut.cache;
 
+import java.util.concurrent.Callable;
+import java.util.concurrent.TimeUnit;
+
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.redis.cache.RedisCache;
 import org.springframework.data.redis.cache.RedisCacheElement;
@@ -65,7 +68,6 @@ public class CustomizedRedisCache extends RedisCache {
 		// 指定自动刷新时间
 		this.preloadSecondTime = preloadSecondTime;
 		this.prefix = prefix;
-
 	}
 
 	/**
@@ -122,6 +124,46 @@ public class CustomizedRedisCache extends RedisCache {
 		}
 
 		return redisCacheElement;
+	}
+
+	@Override
+	public <T> T get(final Object key, final Callable<T> valueLoader) {
+
+		ValueWrapper val = get(key);
+		Object value = null;
+		if (val == null) {
+			// 加一个分布式锁，只放一个请求去刷新缓存
+			RedisLock redisLock = new RedisLock((RedisTemplate) redisOperations,
+					this.getCacheKey(key));
+			try {
+				if (redisLock.lock()) {
+					val = get(key);
+					if (val != null) {
+						return (T) val.get();
+					}
+
+					value = valueLoader.call();
+					redisOperations.opsForValue().set(this.getCacheKey(key), value,
+							this.getExpirationSecondTime(), TimeUnit.SECONDS);
+				} else {
+					Thread.sleep(100);// 小憩一会儿
+					return get(key, valueLoader);
+				}
+			} catch (Exception e) {
+				log.info(e.getMessage(), e);
+			} finally {
+				redisLock.unlock();
+			}
+		} else {
+			// 完善在高并发时，前面获取锁的请求还未完成设置缓存时，请求缓存结果为null的情形,递归调用重新取值
+			if (val.get() == null) {
+				return get(key, valueLoader);
+			}
+
+			return (T) val.get();
+		}
+
+		return (T) value;
 	}
 
 	/**

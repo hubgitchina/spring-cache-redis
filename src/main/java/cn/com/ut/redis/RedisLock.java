@@ -191,9 +191,8 @@ public class RedisLock {
 				// 上锁成功结束请求
 				return locked;
 			}
-
 			// 每次请求等待一段时间
-			seleep(10, 50000);
+			sleep(10, 50000);
 		}
 		return locked;
 	}
@@ -229,7 +228,7 @@ public class RedisLock {
 			}
 
 			// 每次请求等待一段时间
-			seleep(10, 50000);
+			sleep(10, 50000);
 		}
 	}
 
@@ -332,7 +331,7 @@ public class RedisLock {
 	 * @Description: 线程等待时间
 	 * @author yuhao.wang
 	 */
-	private void seleep(long millis, int nanos) {
+	private void sleep(long millis, int nanos) {
 
 		try {
 			Thread.sleep(millis, random.nextInt(nanos));
