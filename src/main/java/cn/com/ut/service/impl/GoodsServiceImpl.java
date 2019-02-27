@@ -8,7 +8,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
-import org.springframework.cache.annotation.Caching;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -122,16 +121,22 @@ public class GoodsServiceImpl implements GoodsService {
 	}
 
 	@Override
-	// @CacheEvict(value = "goods", key = "#goodsIdVo.goodsId")
+	@CacheEvict(value = "goods", key = "#goodsIdVo.goodsId")
 
 	// 一次删除多个Key对应的缓存数据
-	@Caching(evict = { @CacheEvict(value = "goods", key = "#goodsIdVo.goodsId"),
-			@CacheEvict(value = "goods", key = "#goodsIdVo.goodsId+'_image'") })
+	// @Caching(evict = { @CacheEvict(value = "goods", key =
+	// "#goodsIdVo.goodsId"),
+	// @CacheEvict(value = "goods", key = "#goodsIdVo.goodsId+'_image'") })
 	public void delete(GoodsIdVo goodsIdVo) {
 
-		Timestamp now = new Timestamp(System.currentTimeMillis());
+		// throw new RuntimeException("error");
 
-		goodsRepository.deleteByGoodsId("Y", "0", userId, now, goodsIdVo.getGoodsId());
+		System.out.println("从数据库删除成功");
+
+		// Timestamp now = new Timestamp(System.currentTimeMillis());
+
+		// goodsRepository.deleteByGoodsId("Y", "0", userId, now,
+		// goodsIdVo.getGoodsId());
 	}
 
 	@Override

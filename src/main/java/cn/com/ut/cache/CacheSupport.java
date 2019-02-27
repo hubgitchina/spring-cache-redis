@@ -38,4 +38,12 @@ public interface CacheSupport {
 	 */
 	void refreshCacheByKey(String cacheName, String cacheKey);
 
+	/**
+	 * 按容器以及指定键删除invocation_cache_key_suffix后缀的方法信息缓存
+	 * 
+	 * @param cacheName
+	 * @param cacheKey
+	 */
+	void deleteCacheByKey(Object targetBean, Method targetMethod, Class[] invocationParamTypes,
+			Object[] invocationArgs, Set<String> cacheName, String cacheKey);
 }

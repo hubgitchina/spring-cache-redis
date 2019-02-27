@@ -9,13 +9,14 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.aspectj.lang.ProceedingJoinPoint;
-import org.aspectj.lang.annotation.Around;
+import org.aspectj.lang.JoinPoint;
+import org.aspectj.lang.annotation.AfterReturning;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Pointcut;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.springframework.aop.framework.AopProxyUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.core.BridgeMethodResolver;
 import org.springframework.stereotype.Component;
@@ -53,31 +54,33 @@ public class CachingAnnotationsAspect {
 		return (anns.isEmpty() ? null : anns);
 	}
 
-	private Method getSpecificmethod(ProceedingJoinPoint pjp) {
-
-		MethodSignature methodSignature = (MethodSignature) pjp.getSignature();
-		Method method = methodSignature.getMethod();
-		// The method may be on an interface, but we need attributes from the
-		// target class. If the target class is null, the method will be
-		// unchanged.
-		Class<?> targetClass = AopProxyUtils.ultimateTargetClass(pjp.getTarget());
-		if (targetClass == null && pjp.getTarget() != null) {
-			targetClass = pjp.getTarget().getClass();
-		}
-		Method specificMethod = ClassUtils.getMostSpecificMethod(method, targetClass);
-		// If we are dealing with method with generic parameters, find the
-		// original method.
-		specificMethod = BridgeMethodResolver.findBridgedMethod(specificMethod);
-		return specificMethod;
-	}
+	// private Method getSpecificmethod(ProceedingJoinPoint pjp) {
+	//
+	// MethodSignature methodSignature = (MethodSignature) pjp.getSignature();
+	// Method method = methodSignature.getMethod();
+	// // The method may be on an interface, but we need attributes from the
+	// // target class. If the target class is null, the method will be
+	// // unchanged.
+	// Class<?> targetClass =
+	// AopProxyUtils.ultimateTargetClass(pjp.getTarget());
+	// if (targetClass == null && pjp.getTarget() != null) {
+	// targetClass = pjp.getTarget().getClass();
+	// }
+	// Method specificMethod = ClassUtils.getMostSpecificMethod(method,
+	// targetClass);
+	// // If we are dealing with method with generic parameters, find the
+	// // original method.
+	// specificMethod = BridgeMethodResolver.findBridgedMethod(specificMethod);
+	// return specificMethod;
+	// }
 
 	@Pointcut("@annotation(org.springframework.cache.annotation.Cacheable)")
-	public void pointcut() {
+	public void cacheable() {
 
 	}
 
-	@Around("pointcut()")
-	public Object registerInvocation(ProceedingJoinPoint joinPoint) throws Throwable {
+	@AfterReturning("cacheable()")
+	public void registerInvocation(JoinPoint joinPoint) {
 
 		Method method = this.getSpecificmethod(joinPoint);
 
@@ -97,7 +100,80 @@ public class CachingAnnotationsAspect {
 					joinPoint.getArgs(), cacheSet, cacheKey);
 		}
 
-		return joinPoint.proceed();
+	}
+
+	@Pointcut("@annotation(org.springframework.cache.annotation.CacheEvict)")
+	public void cacheEvict() {
 
 	}
+
+	@AfterReturning("cacheEvict()")
+	public void deleteCache(JoinPoint joinPoint) {
+
+		Method method = this.getSpecificmethod(joinPoint);
+
+		List<CacheEvict> annotations = this.getMethodAnnotations(method, CacheEvict.class);
+
+		Set<String> cacheSet = new HashSet<String>();
+		String cacheKey = null;
+		for (CacheEvict cacheEvict : annotations) {
+			cacheSet.addAll(Arrays.asList(cacheEvict.value()));
+			cacheKey = cacheEvict.key();
+		}
+
+		if (joinPoint.getSignature() instanceof MethodSignature) {
+			Class[] parameterTypes = ((MethodSignature) joinPoint.getSignature())
+					.getParameterTypes();
+			cacheSupport.deleteCacheByKey(joinPoint.getTarget(), method, parameterTypes,
+					joinPoint.getArgs(), cacheSet, cacheKey);
+		}
+
+	}
+
+	private Method getSpecificmethod(JoinPoint pjp) {
+
+		MethodSignature methodSignature = (MethodSignature) pjp.getSignature();
+		Method method = methodSignature.getMethod();
+		// The method may be on an interface, but we need attributes from the
+		// target class. If the target class is null, the method will be
+		// unchanged.
+		Class<?> targetClass = AopProxyUtils.ultimateTargetClass(pjp.getTarget());
+		if (targetClass == null && pjp.getTarget() != null) {
+			targetClass = pjp.getTarget().getClass();
+		}
+		Method specificMethod = ClassUtils.getMostSpecificMethod(method, targetClass);
+		// If we are dealing with method with generic parameters, find the
+		// original method.
+		specificMethod = BridgeMethodResolver.findBridgedMethod(specificMethod);
+		return specificMethod;
+	}
+
+	// @Around("cacheEvict()")
+	// public Object deleteCache(ProceedingJoinPoint joinPoint) throws Throwable
+	// {
+	//
+	// Method method = this.getSpecificmethod(joinPoint);
+	//
+	// List<CacheEvict> annotations = this.getMethodAnnotations(method,
+	// CacheEvict.class);
+	//
+	// Set<String> cacheSet = new HashSet<String>();
+	// String cacheKey = null;
+	// for (CacheEvict cacheEvict : annotations) {
+	// cacheSet.addAll(Arrays.asList(cacheEvict.value()));
+	// cacheKey = cacheEvict.key();
+	// }
+	//
+	// if (joinPoint.getSignature() instanceof MethodSignature) {
+	// Class[] parameterTypes = ((MethodSignature) joinPoint.getSignature())
+	// .getParameterTypes();
+	// cacheSupport.deleteCacheByKey(joinPoint.getTarget(), method,
+	// parameterTypes,
+	// joinPoint.getArgs(), cacheSet, cacheKey);
+	// }
+	//
+	// return joinPoint.proceed();
+	//
+	// }
+
 }

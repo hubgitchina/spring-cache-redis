@@ -60,6 +60,7 @@ public class CacheSupportImpl implements CacheSupport {
 		// 获取注解上真实的value值
 		Collection<? extends Cache> caches = getCache(annotatedCacheNames);
 
+		// 转换注解上的key值
 		Object key = generateKey(caches, cacheKey, targetMethod, invocationArgs, targetBean,
 				CacheOperationExpressionEvaluator.NO_RESULT);
 
@@ -91,6 +92,31 @@ public class CacheSupportImpl implements CacheSupport {
 			refreshCache(invocation, cacheName);
 		} else {
 			log.error("刷新redis缓存，反序列化方法信息异常");
+		}
+
+	}
+
+	@Override
+	public void deleteCacheByKey(Object targetBean, Method targetMethod,
+			Class[] invocationParamTypes, Object[] invocationArgs, Set<String> cacheName,
+			String cacheKey) {
+
+		// 获取注解上真实的value值
+		Collection<? extends Cache> caches = getCache(cacheName);
+		for (Cache cache : caches) {
+			if (cache instanceof CustomizedRedisCache) {
+
+				// 转换注解上的key值
+				Object key = generateKey(caches, cacheKey, targetMethod, invocationArgs, targetBean,
+						CacheOperationExpressionEvaluator.NO_RESULT);
+
+				RedisTemplate redisTemplate = RedisTemplateUtils
+						.getRedisTemplate(redisConnectionFactory);
+				CustomizedRedisCache redisCache = (CustomizedRedisCache) cache;
+
+				// 根据拼接后的key，删除相关缓存
+				redisTemplate.delete(getInvocationCacheKey(redisCache.getCacheKey(key)));
+			}
 		}
 
 	}
